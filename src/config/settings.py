@@ -6,7 +6,7 @@ MVP 1: 1920x1080 해상도 기준 하드코딩된 ROI.
 """
 
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Optional, Tuple
 
 
 @dataclass
@@ -64,3 +64,21 @@ class ROIConfig:
 
     # 캐러셀 (중앙)
     carousel: tuple = (200, 200, 1720, 880)
+
+
+@dataclass
+class GameRegionConfig:
+    """게임 영역 설정.
+
+    전체 모니터 캡처에서 실제 TFT 게임 창 영역만 crop할 때 사용.
+    2560x1440 모니터에서 1920x1080 테두리 없는 창모드 게임:
+        left=320, top=180, width=1920, height=1080
+    """
+    left: int = 0
+    top: int = 0
+    width: int = 0
+    height: int = 0
+
+    @property
+    def enabled(self) -> bool:
+        return self.width > 0 and self.height > 0
