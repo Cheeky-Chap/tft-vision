@@ -53,11 +53,11 @@ ROI_REGIONS = {
 
     # ── 상대 필드 ──
     "enemy_bench":    Region("enemy_bench",    550,  55, 1350, 190),
-    "enemy_board":    Region("enemy_board",    520, 195, 1380, 430),
+    "enemy_board":    Region("enemy_board",    520, 145, 1380, 430),
 
     # ── 내 필드 ──
-    "my_board":       Region("my_board",       450, 425, 1460, 760),
-    "my_bench":       Region("my_bench",       350, 760, 1410, 890),
+    "my_board":       Region("my_board",       450, 375, 1460, 760),
+    "my_bench":       Region("my_bench",       350, 710, 1410, 890),
 
     # ── 전체 ──
     "full_screen":    Region("full_screen",      0,   0, 1920, 1080),
