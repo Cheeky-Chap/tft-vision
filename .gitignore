@@ -47,6 +47,9 @@ Thumbs.db
 # Git
 *.orig
 
+# Labels & annotations (human-labeled game data)
+labels.csv
+
 # Image & video safety net (never commit raw game media)
 *.png
 *.jpg

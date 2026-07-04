@@ -26,6 +26,8 @@
 # │   │   └── game_region.py
 # │   └── visualization/    # 시각화/디버그
 # │       └── debug_roi.py  # ROI overlay + contact sheet
+# ├── tools/               # CLI 도구
+# │   └── label_samples.py # 수동 데이터 레이블링
 # ├── collector/            # 데이터 수집 (신규)
 # │   └── sample_collector.py  # --sample-run 세션 관리
 # ├── config/               # 설정
@@ -266,9 +268,99 @@
 # > `samples/` 폴더는 `.gitignore`에 포함되어 commit되지 않습니다.
 # > 각 파일명은 `{timestamp}_{frame_index:04d}.png` 형식입니다.
 #
-# ## 주의사항
-# - TFT 게임이 **전체화면(1920x1080)** 또는 **테두리 없는 창모드** 상태여야 함
-# - 듀얼 모니터일 경우 `--list-monitors`로 TFT 실행 모니터 확인 후 MONITOR_INDEX 설정
-# - 게임 영역 좌표는 **모니터 절대 좌표** 기준 (--list-monitors로 모니터 left/top 확인)
-# - `.env`에 캡처 핫키/딜레이/모니터 설정 가능
-# - 개인 스크린샷, 토큰, API key는 절대 commit 금지
+## 수동 데이터 레이블링 (label_samples)
+
+수집된 샘플 이미지를 사람이 보고 직접 label(정답)을 입력하여 `labels.csv`로 저장합니다.
+
+### 사용법
+
+```powershell
+# 기본: 상점 슬롯 1 레이블링 (이미 레이블된 이미지는 자동 건너뜀)
+python -m src.tools.label_samples samples/session_20260704_153000/shop_slot_1 --roi shop_slot_1
+
+# 내 보드 레이블링
+python -m src.tools.label_samples samples/session_20260704_153000/my_board --roi my_board
+
+# 기존 레이블 덮어쓰기
+python -m src.tools.label_samples samples/session_20260704_153000/shop_slot_1 --roi shop_slot_1 --overwrite
+
+# 이미지 표시 창 없이 경로만 출력 (SSH/원격 터미널)
+python -m src.tools.label_samples samples/session_20260704_153000/shop_slot_2 --roi shop_slot_2 --no-display
+```
+
+### 레이블링 흐름
+
+1. 도구 실행 → 대상 폴더 내 이미지 파일 스캔
+2. 기존 `labels.csv` 로드 → 이미 레이블된 이미지는 건너뜀 (`--overwrite` 시 재입력)
+3. 이미지 하나씩 표시 (cv2 window, 800px 리사이즈)
+4. 사용자 label 입력 → 즉시 `labels.csv`에 저장
+5. `Enter` → 해당 이미지 건너뜀 (레이블 미저장)
+6. `q` → 지금까지 저장 후 종료
+7. `qq` → 즉시 종료 (마지막 레이블 미저장)
+8. `Ctrl+C` → 안전하게 종료 (cv2 window 정리)
+
+### CSV 컬럼
+
+| 컬럼 | 설명 |
+|------|------|
+| `image_path` | 이미지 파일명 (폴더 내 상대 경로) |
+| `roi` | ROI 이름 (예: shop_slot_1, my_board) |
+| `label` | 사람이 입력한 정답 레이블 |
+| `notes` | 추가 메모 (선택) |
+| `created_at` | 레이블링 시각 (ISO 8601) |
+
+### 레이블 예시
+
+| ROI | 예시 label |
+|-----|-----------|
+| `shop_slot_1~5` | `"카사딘"`, `"아칼리"`, `"자야"`, `"헤카림"` |
+| `player_gold` | `"12"`, `"50"`, `"88"` |
+| `player_level` | `"2"`, `"3"`, `"7"` |
+| `stage_info` | `"2-1"`, `"4-3"`, `"5-6"` |
+| `my_board` | `"4암흑성 2기사"`, `"6마법사 3별"` |
+| `my_bench` | `"요릭_카밀_레넥"`, `"없음"` |
+
+> `labels.csv`는 `samples/` 하위 폴더 내에 생성되며, `.gitignore`에 포함되어
+> commit되지 않습니다.
+
+## 지원 ROI 목록
+
+모든 ROI는 `--debug-roi` contact sheet에서 시각적 확인이 가능합니다.
+
+| ROI 이름 | 영역 (1920x1080) | 설명 |
+|---------|-----------------|------|
+| `item_area` | (0,270)-(110,780) | 좌측 아이템/장비 영역 |
+| `player_level` | (260,870)-(470,920) | 레벨 |
+| `player_gold` | (910,880)-(1040,920) | 골드 |
+| `player_streak` | (1040,870)-(1120,920) | 연승/연패 스트릭 |
+| `shop` | (470,920)-(1490,1080) | 상점 카드 5개 (전체) |
+| `shop_slot_1` | (470,920)-(674,1080) | 상점 슬롯 1 (204×160) |
+| `shop_slot_2` | (674,920)-(878,1080) | 상점 슬롯 2 (204×160) |
+| `shop_slot_3` | (878,920)-(1082,1080) | 상점 슬롯 3 (204×160) |
+| `shop_slot_4` | (1082,920)-(1286,1080) | 상점 슬롯 4 (204×160) |
+| `shop_slot_5` | (1286,920)-(1490,1080) | 상점 슬롯 5 (204×160) |
+| `stage_info` | (730,0)-(1180,40) | 라운드/스테이지 정보 |
+| `player_list` | (1620,180)-(1920,800) | 상대 목록 (우측) |
+| `enemy_bench` | (550,35)-(1350,170) | 상대 벤치 |
+| `enemy_board` | (520,95)-(1380,410) | 상대 보드 |
+| `my_board` | (450,300)-(1460,730) | 내 보드 |
+| `my_bench` | (340,650)-(1560,840) | 내 벤치 |
+| `full_screen` | (0,0)-(1920,1080) | 전체 화면 |
+
+> 좌표는 실제 `captures/game/*.png` 이미지로 보정 완료.
+
+## 상점 슬롯 분할
+
+`shop` ROI(470,920)-(1490,1080)는 5개의 챔피언 카드 슬롯으로 자동 분할됩니다.
+
+- `shop` 전체 영역을 5등분 (각 슬롯 204×160)
+- 각 슬롯은 개별 폴더에 저장: `crops/shop_slot_1/` ~ `crops/shop_slot_5/`
+- OCR/챔피언 이름 인식은 아직 구현 전
+- `--debug-roi` contact sheet에서 각 슬롯 crop 결과 확인 가능
+
+## 주의사항
+- TFT 게임이 **전체화면(1920x1080)** 또는 **테두리 없는 창모드** 상태여야 함
+- 듀얼 모니터일 경우 `--list-monitors`로 TFT 실행 모니터 확인 후 MONITOR_INDEX 설정
+- 게임 영역 좌표는 **모니터 절대 좌표** 기준 (--list-monitors로 모니터 left/top 확인)
+- `.env`에 캡처 핫키/딜레이/모니터 설정 가능
+- 개인 스크린샷, 토큰, API key는 절대 commit 금지
