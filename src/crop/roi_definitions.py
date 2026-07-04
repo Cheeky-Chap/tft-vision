@@ -45,6 +45,13 @@ ROI_REGIONS = {
     # ── 상점 ──
     "shop":           Region("shop",           470, 920, 1490, 1080),
 
+    # ── 상점 슬롯 (shop을 5등분) ──
+    "shop_slot_1":    Region("shop_slot_1",    470, 920,  674, 1080),
+    "shop_slot_2":    Region("shop_slot_2",    674, 920,  878, 1080),
+    "shop_slot_3":    Region("shop_slot_3",    878, 920, 1082, 1080),
+    "shop_slot_4":    Region("shop_slot_4",   1082, 920, 1286, 1080),
+    "shop_slot_5":    Region("shop_slot_5",   1286, 920, 1490, 1080),
+
     # ── 스테이지 정보 (상단 중앙) ──
     "stage_info":     Region("stage_info",     730,   0, 1180,  40),
 

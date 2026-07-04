@@ -24,6 +24,11 @@ ROI_COLORS = {
     "player_gold":    (  0, 255, 255),  # yellow
     "player_streak":  (255, 128,   0),  # light blue
     "shop":           (  0, 255,   0),  # green
+    "shop_slot_1":    ( 50, 200,  50),  # dark green
+    "shop_slot_2":    (100, 200, 100),  # green shade
+    "shop_slot_3":    (150, 200, 150),  # green shade
+    "shop_slot_4":    (100, 200, 100),  # green shade
+    "shop_slot_5":    ( 50, 200,  50),  # dark green
     "stage_info":     (255, 165,   0),  # orange
     "player_list":    (128,   0, 128),  # purple
     "enemy_bench":    (  0, 165, 255),  # orange-red
