@@ -100,6 +100,10 @@ def main():
         "--debug-roi", action="store_true",
         help="ROI 검증용 overlay + contact sheet 생성 (debug/ 폴더)",
     )
+    parser.add_argument(
+        "--sample-run", action="store_true",
+        help="샘플 수집 모드: samples/session_*/ 에 game + ROI crop 저장",
+    )
     args = parser.parse_args()
 
     # 모니터 인덱스 및 게임 영역 결정
@@ -174,6 +178,15 @@ def main():
             from src.crop.cropper import ROICropper
             cropper = ROICropper(base_dir="crops")
 
+        # Sample collector 준비
+        sample_collector = None
+        if args.sample_run:
+            from src.collector.sample_collector import SampleCollector
+            sample_collector = SampleCollector()
+            logger.info(
+                "Sample collection active → %s", sample_collector.session_path,
+            )
+
         count = 0
         while args.count == 0 or count < args.count:
             count += 1
@@ -237,6 +250,20 @@ def main():
                     sheet_path = create_contact_sheet(crop_images)
                     if sheet_path:
                         logger.info("  Debug contact sheet: %s", sheet_path)
+
+                # 5) Sample collection (--sample-run)
+                if sample_collector is not None:
+                    crop_images = cropper.crop_all(frame_for_roi)
+                    saved = sample_collector.collect(
+                        game_frame=frame_for_roi,
+                        crops=crop_images,
+                        frame_idx=count,
+                    )
+                    logger.info(
+                        "  Sample [%d] → %s (%d ROIs)",
+                        count, sample_collector.session_name,
+                        len(saved) - 1,
+                    )
 
             # 다음 캡처까지 대기
             if args.count == 0 or count < args.count:

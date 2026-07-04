@@ -10,6 +10,7 @@
 # - game region crop 지원 (2560x1440 모니터 → 1920x1080 게임 창)
 # - 듀얼 모니터 환경 설정 완료
 # - `--debug-roi`로 ROI 검증 가능
+# - `--sample-run`으로 OCR 학습용 샘플 데이터 수집 가능
 # - **OCR/인식은 아직 구현 전 — 다음 단계**
 #
 # ## 프로젝트 구조
@@ -25,6 +26,8 @@
 # │   │   └── game_region.py
 # │   └── visualization/    # 시각화/디버그
 # │       └── debug_roi.py  # ROI overlay + contact sheet
+# ├── collector/            # 데이터 수집 (신규)
+# │   └── sample_collector.py  # --sample-run 세션 관리
 # ├── config/               # 설정
 # │   └── settings.py
 # ├── captures/             # 원본 캡처 (git 제외)
@@ -50,6 +53,8 @@
 # │   ├── roi_overlay/      #   ROI 사각형이 그려진 game frame
 # │   └── contact_sheet/    #   모든 crop을 한 장에 합친 이미지
 # ├── logs/                 # 실행 로그 (git 제외)
+# ├── samples/               # sample-run 샘플 데이터 (git 제외)
+# │   └── session_*          # 세션별 정리된 crop + game frame
 # ├── requirements.txt
 # ├── .gitignore
 # └── README.md
@@ -172,6 +177,7 @@
 # | `--preview` | ROI crop 결과 창 표시 |
 # | `--no-save` | 저장 없이 메모리만 처리 |
 # | `--debug-roi` | ROI 검증용 overlay + contact sheet 생성 |
+# | `--sample-run` | OCR 학습용 샘플 데이터 수집 (samples/session_*/) |
 #
 # ## ROI 검증 (--debug-roi)
 #
@@ -225,6 +231,40 @@
 # - 각 슬롯은 개별 폴더에 저장: `crops/shop_slot_1/` ~ `crops/shop_slot_5/`
 # - OCR/챔피언 이름 인식은 아직 구현 전
 # - `--debug-roi` contact sheet에서 각 슬롯 crop 결과 확인 가능
+#
+# ## 샘플 데이터 수집 (--sample-run)
+#
+# `--sample-run`으로 OCR/인식 모델 학습용 데이터를 수집할 수 있습니다.
+#
+# ```powershell
+# # 100 프레임 샘플 수집 (2초 간격, 게임 영역 지정)
+# python -m src.capture_loop --monitor 2 --game-region 320,180,1920,1080 --sample-run --interval 2.0 --count 100
+#
+# # 무한 수집 (Ctrl+C로 중단)
+# python -m src.capture_loop --monitor 2 --game-region 320,180,1920,1080 --sample-run --interval 5.0 --count 0
+# ```
+#
+# ### 세션 폴더 구조
+# ```
+# samples/session_20260704_153000/
+# ├── game/                 # 원본 game frame (1920x1080)
+# │   ├── 20260704_153000_000001_0001.png
+# │   ├── 20260704_153005_000002_0002.png
+# │   └── ...
+# ├── shop_slot_1/          # 상점 슬롯 1 crop (204×160)
+# ├── shop_slot_2/          # 상점 슬롯 2 crop
+# ├── shop_slot_3/          # 상점 슬롯 3 crop
+# ├── shop_slot_4/          # 상점 슬롯 4 crop
+# ├── shop_slot_5/          # 상점 슬롯 5 crop
+# ├── player_gold/          # 골드 crop
+# ├── player_level/         # 레벨 crop
+# ├── stage_info/           # 라운드/스테이지 crop
+# ├── my_board/             # 내 보드 crop
+# └── my_bench/             # 내 벤치 crop
+# ```
+#
+# > `samples/` 폴더는 `.gitignore`에 포함되어 commit되지 않습니다.
+# > 각 파일명은 `{timestamp}_{frame_index:04d}.png` 형식입니다.
 #
 # ## 주의사항
 # - TFT 게임이 **전체화면(1920x1080)** 또는 **테두리 없는 창모드** 상태여야 함

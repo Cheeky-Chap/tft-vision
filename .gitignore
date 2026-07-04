@@ -15,6 +15,7 @@ venv/
 captures/
 crops/
 debug/
+samples/
 data/raw/
 data/cache/
 
