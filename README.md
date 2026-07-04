@@ -307,33 +307,49 @@
 ## 수동 데이터 레이블링 (label_samples)
 
 수집된 샘플 이미지를 사람이 보고 직접 label(정답)을 입력하여 `labels.csv`로 저장합니다.
+ROI 유형에 따라 세 가지 모드로 동작합니다.
 
 ### 사용법
 
 ```powershell
-# 기본: 상점 슬롯 1 레이블링 (이미 레이블된 이미지는 자동 건너뜀)
-python -m src.tools.label_samples samples/session_20260704_153000/shop_slot_1 --roi shop_slot_1
+# 상점 슬롯 1 — champion 모드 (챔피언 이름만 입력)
+python -m src.tools.label_samples samples/session_xxx/shop_slot_1 --roi shop_slot_1
 
-# 내 보드 레이블링
-python -m src.tools.label_samples samples/session_20260704_153000/my_board --roi my_board
+# 내 보드 — structured 모드 (기물 목록: champ_starLevel,champ_starLevel)
+python -m src.tools.label_samples samples/session_xxx/my_board --roi my_board
+
+# 내 벤치 — structured 모드
+python -m src.tools.label_samples samples/session_xxx/my_bench --roi my_bench
+
+# 골드/레벨 등 — simple 모드 (자유 텍스트)
+python -m src.tools.label_samples samples/session_xxx/player_gold --roi player_gold
 
 # 기존 레이블 덮어쓰기
-python -m src.tools.label_samples samples/session_20260704_153000/shop_slot_1 --roi shop_slot_1 --overwrite
+python -m src.tools.label_samples samples/session_xxx/shop_slot_1 --roi shop_slot_1 --overwrite
 
 # 이미지 표시 창 없이 경로만 출력 (SSH/원격 터미널)
-python -m src.tools.label_samples samples/session_20260704_153000/shop_slot_2 --roi shop_slot_2 --no-display
+python -m src.tools.label_samples samples/session_xxx/shop_slot_2 --roi shop_slot_2 --no-display
 ```
+
+### 모드별 동작
+
+| 모드 | 대상 ROI | 입력 방식 | 예시 |
+|------|---------|----------|------|
+| **champion** | `shop_slot_1~5` | 챔피언 이름 1개 | `ahri`, `yasuo`, `unknown` |
+| **structured** | `my_board`, `my_bench`, `enemy_board`, `enemy_bench` | 기물 목록: `champ_star,...` | `ahri_2,yasuo_1,lux_unknown` |
+| **simple** | `player_gold`, `player_level`, `stage_info`, `player_streak`, `item_area`, `player_list` | 자유 텍스트 1개 | `12`, `2-1`, `3` |
 
 ### 레이블링 흐름
 
 1. 도구 실행 → 대상 폴더 내 이미지 파일 스캔
 2. 기존 `labels.csv` 로드 → 이미 레이블된 이미지는 건너뜀 (`--overwrite` 시 재입력)
-3. 이미지 하나씩 표시 (cv2 window, 800px 리사이즈)
-4. 사용자 label 입력 → 즉시 `labels.csv`에 저장
-5. `Enter` → 해당 이미지 건너뜀 (레이블 미저장)
-6. `q` → 지금까지 저장 후 종료
-7. `qq` → 즉시 종료 (마지막 레이블 미저장)
-8. `Ctrl+C` → 안전하게 종료 (cv2 window 정리)
+3. ROI에 따라 모드 자동 선택
+4. 이미지 하나씩 표시 (cv2 window, 800px 리사이즈)
+5. 사용자 입력 → 즉시 `labels.csv`에 저장
+6. `Enter` → 해당 이미지 건너뜀 (레이블 미저장)
+7. `q` → 지금까지 저장 후 종료
+8. `qq` → 즉시 종료 (마지막 레이블 미저장)
+9. `Ctrl+C` → 안전하게 종료 (cv2 window 정리)
 
 ### CSV 컬럼
 
@@ -341,20 +357,36 @@ python -m src.tools.label_samples samples/session_20260704_153000/shop_slot_2 --
 |------|------|
 | `image_path` | 이미지 파일명 (폴더 내 상대 경로) |
 | `roi` | ROI 이름 (예: shop_slot_1, my_board) |
-| `label` | 사람이 입력한 정답 레이블 |
+| `champion` | 챔피언 이름 (여러 기물은 쉼표分隔) |
+| `star_level` | 별 개수 (1/2/3/unknown, 쉼표分隔) |
+| `items` | 아이템 (향후 사용) |
+| `position` | 보드 위치 (향후 사용) |
+| `label` | 사람이 입력한 원본 레이블 |
 | `notes` | 추가 메모 (선택) |
 | `created_at` | 레이블링 시각 (ISO 8601) |
 
+### 레이블 규칙
+
+| 규칙 | 설명 |
+|------|------|
+| **챔피언 이름** | 소문자 영어 (예: `ahri`, `yasuo`, `aatrox`, `lee_sin`) |
+| **별 개수** | `1`, `2`, `3` 또는 애매하면 `unknown` |
+| **모르는 챔피언** | `unknown` 입력 |
+| **나쁜 crop** | `bad` 입력 (이미지 품질 불량, 잘린 이미지 등) |
+| **보드/벤치 형식** | `챔피언_별개수,챔피언_별개수,...` (예: `ahri_2,yasuo_1`) |
+| **빈 보드/벤치** | 그냥 `Enter` 입력 (건너뜀) 또는 `empty` |
+
 ### 레이블 예시
 
-| ROI | 예시 label |
-|-----|-----------|
-| `shop_slot_1~5` | `"카사딘"`, `"아칼리"`, `"자야"`, `"헤카림"` |
-| `player_gold` | `"12"`, `"50"`, `"88"` |
-| `player_level` | `"2"`, `"3"`, `"7"` |
-| `stage_info` | `"2-1"`, `"4-3"`, `"5-6"` |
-| `my_board` | `"4암흑성 2기사"`, `"6마법사 3별"` |
-| `my_bench` | `"요릭_카밀_레넥"`, `"없음"` |
+| ROI | 입력 | champion | star_level | label |
+|-----|------|----------|------------|-------|
+| `shop_slot_1` | `ahri` | ahri | | ahri |
+| `shop_slot_2` | `unknown` | unknown | | unknown |
+| `shop_slot_3` | `bad` | bad | | bad |
+| `my_board` | `ahri_2,yasuo_1,lux_unknown` | ahri,yasuo,lux | 2,1,unknown | ahri_2,yasuo_1,lux_unknown |
+| `my_bench` | `sett_3` | sett | 3 | sett_3 |
+| `player_gold` | `12` | | | 12 |
+| `stage_info` | `2-1` | | | 2-1 |
 
 > `labels.csv`는 `samples/` 하위 폴더 내에 생성되며, `.gitignore`에 포함되어
 > commit되지 않습니다.
