@@ -314,16 +314,19 @@ ROI 유형에 따라 세 가지 모드로 동작합니다.
 ### 사용법
 
 ```powershell
-# 상점 슬롯 1 — champion 모드 (챔피언 이름만 입력)
+# 단일 폴더 (기존 방식)
 python -m src.tools.label_samples samples/session_xxx/shop_slot_1 --roi shop_slot_1
 
-# 내 보드 — structured 모드 (기물 목록: champ_starLevel,champ_starLevel)
+# 상점 5개 슬롯 통합 라벨링 (--shop)
+python -m src.tools.label_samples samples/session_xxx --shop
+
+# 여러 폴더를 명시적으로 지정
+python -m src.tools.label_samples samples/xxx/shop_slot_1 samples/xxx/shop_slot_2 samples/xxx/shop_slot_3 samples/xxx/shop_slot_4 samples/xxx/shop_slot_5 --roi shop_card
+
+# 내 보드 — structured 모드
 python -m src.tools.label_samples samples/session_xxx/my_board --roi my_board
 
-# 내 벤치 — structured 모드
-python -m src.tools.label_samples samples/session_xxx/my_bench --roi my_bench
-
-# 골드/레벨 등 — simple 모드 (자유 텍스트)
+# 골드/레벨 등 — simple 모드
 python -m src.tools.label_samples samples/session_xxx/player_gold --roi player_gold
 
 # 기존 레이블 덮어쓰기
@@ -333,11 +336,28 @@ python -m src.tools.label_samples samples/session_xxx/shop_slot_1 --roi shop_slo
 python -m src.tools.label_samples samples/session_xxx/shop_slot_2 --roi shop_slot_2 --no-display
 ```
 
+### 상점 통합 라벨링 (`--shop`)
+
+상점 카드 인식 학습을 위해 `shop_slot_1~5`를 하나의 `shop_card` 데이터셋으로 취급합니다.
+
+```powershell
+# 세션 폴더 아래 shop_slot_1~5를 모두 스캔하여 통합 라벨링
+python -m src.tools.label_samples samples/session_20260704_153000 --shop
+```
+
+- 5개 슬롯의 이미지를 섞어서 한 번에 라벨링
+- CSV는 세션 폴더 아래 `labels_shop_card.csv`에 저장
+- `roi` = `shop_card` (모든 슬롯 동일)
+- `slot` 컬럼에 원래 슬롯 번호(1~5) 보존
+- 개별 `shop_slot_N/labels.csv`는 건드리지 않음 (폴더 구조 유지)
+- 학습 시 `labels_shop_card.csv`만 불러오면 5개 슬롯 전체 데이터셋 사용 가능
+- 실제 게임 판단(슬롯 위치 기반 로직)에는 개별 폴더 구조 활용
+
 ### 모드별 동작
 
 | 모드 | 대상 ROI | 입력 방식 | 예시 |
 |------|---------|----------|------|
-| **champion** | `shop_slot_1~5` | 챔피언 이름 1개 (한글/영문) | `아리`, `야스오`, `모름` |
+| **champion** | `shop_slot_*`, `shop_card` | 챔피언 이름 1개 (한글/영문) | `아리`, `야스오`, `모름` |
 | **structured** | `my_board`, `my_bench`, `enemy_board`, `enemy_bench` | 기물 목록: `이름_별,...` | `아리_2,야스오_1,럭스_unknown` |
 | **simple** | `player_gold`, `player_level`, `stage_info`, `player_streak`, `item_area`, `player_list` | 자유 텍스트 1개 | `12`, `2-1`, `3` |
 
@@ -357,8 +377,9 @@ python -m src.tools.label_samples samples/session_xxx/shop_slot_2 --roi shop_slo
 
 | 컬럼 | 설명 |
 |------|------|
-| `image_path` | 이미지 파일명 (폴더 내 상대 경로) |
-| `roi` | ROI 이름 (예: shop_slot_1, my_board) |
+| `image_path` | 이미지 파일명 (폴더 내 상대 경로, 예: shop_slot_1/xxx.png) |
+| `roi` | ROI 이름 (예: shop_card, shop_slot_1, my_board) |
+| `slot` | 슬롯 번호 (shop_card 통합 시 1~5, 단일 폴더시 빈값) |
 | `champion` | 챔피언 이름 (영문 canonical id, 여러 기물은 쉼표分隔) |
 | `star_level` | 별 개수 (1/2/3/unknown, 쉼표分隔) |
 | `items` | 아이템 (향후 사용) |
