@@ -1,0 +1,17 @@
+# TFT Vision — Capture/ROI MVP 1
+# Windows 노트북 실행용
+# Python 3.11+
+
+# Screen capture
+pyautogui==0.9.54
+opencv-python==4.10.0.84
+Pillow==11.1.0
+mss==10.0.0
+numpy==1.26.4
+
+# Image processing & OCR
+pytesseract==0.3.13       # OCR (추후 MVP2+)
+
+# Utils
+pydantic==2.10.4
+python-dotenv==1.0.1

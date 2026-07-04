@@ -1,0 +1,59 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.so
+
+# Virtual environment
+.venv/
+venv/
+.env
+
+# Captures & crops (never commit raw game data)
+captures/
+crops/
+data/raw/
+data/cache/
+
+# Logs & history
+logs/
+history/
+*.jsonl
+
+# Secrets & tokens
+auth.json
+tokens/
+secrets/
+*.auth
+*.token
+*.key
+credentials*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+*.orig
+
+# Image & video safety net (never commit raw game media)
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.bmp
+*.gif
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.webm
