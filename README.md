@@ -26,6 +26,8 @@
 # │   │   └── game_region.py
 # │   └── visualization/    # 시각화/디버그
 # │       └── debug_roi.py  # ROI overlay + contact sheet
+# ├── data/                # 챔피언 매핑 등 정적 데이터
+# │   └── champion_aliases.json  # 한글→영문 챔피언명 매핑
 # ├── tools/               # CLI 도구
 # │   └── label_samples.py # 수동 데이터 레이블링
 # ├── collector/            # 데이터 수집 (신규)
@@ -335,8 +337,8 @@ python -m src.tools.label_samples samples/session_xxx/shop_slot_2 --roi shop_slo
 
 | 모드 | 대상 ROI | 입력 방식 | 예시 |
 |------|---------|----------|------|
-| **champion** | `shop_slot_1~5` | 챔피언 이름 1개 | `ahri`, `yasuo`, `unknown` |
-| **structured** | `my_board`, `my_bench`, `enemy_board`, `enemy_bench` | 기물 목록: `champ_star,...` | `ahri_2,yasuo_1,lux_unknown` |
+| **champion** | `shop_slot_1~5` | 챔피언 이름 1개 (한글/영문) | `아리`, `야스오`, `모름` |
+| **structured** | `my_board`, `my_bench`, `enemy_board`, `enemy_bench` | 기물 목록: `이름_별,...` | `아리_2,야스오_1,럭스_unknown` |
 | **simple** | `player_gold`, `player_level`, `stage_info`, `player_streak`, `item_area`, `player_list` | 자유 텍스트 1개 | `12`, `2-1`, `3` |
 
 ### 레이블링 흐름
@@ -357,11 +359,12 @@ python -m src.tools.label_samples samples/session_xxx/shop_slot_2 --roi shop_slo
 |------|------|
 | `image_path` | 이미지 파일명 (폴더 내 상대 경로) |
 | `roi` | ROI 이름 (예: shop_slot_1, my_board) |
-| `champion` | 챔피언 이름 (여러 기물은 쉼표分隔) |
+| `champion` | 챔피언 이름 (영문 canonical id, 여러 기물은 쉼표分隔) |
 | `star_level` | 별 개수 (1/2/3/unknown, 쉼표分隔) |
 | `items` | 아이템 (향후 사용) |
 | `position` | 보드 위치 (향후 사용) |
-| `label` | 사람이 입력한 원본 레이블 |
+| `label_raw` | 사람이 입력한 원본 레이블 (한글 원문 보존) |
+| `label_normalized` | 정규화된 레이블 (영문 ID, special 값) |
 | `notes` | 추가 메모 (선택) |
 | `created_at` | 레이블링 시각 (ISO 8601) |
 
@@ -369,22 +372,40 @@ python -m src.tools.label_samples samples/session_xxx/shop_slot_2 --roi shop_slo
 
 | 규칙 | 설명 |
 |------|------|
-| **챔피언 이름** | 소문자 영어 (예: `ahri`, `yasuo`, `aatrox`, `lee_sin`) |
+| **챔피언 이름** | 한글 또는 영문 소문자 (예: `아리` / `ahri`, `리 신` / `leesin`) |
 | **별 개수** | `1`, `2`, `3` 또는 애매하면 `unknown` |
-| **모르는 챔피언** | `unknown` 입력 |
-| **나쁜 crop** | `bad` 입력 (이미지 품질 불량, 잘린 이미지 등) |
-| **보드/벤치 형식** | `챔피언_별개수,챔피언_별개수,...` (예: `ahri_2,yasuo_1`) |
-| **빈 보드/벤치** | 그냥 `Enter` 입력 (건너뜀) 또는 `empty` |
+| **모르는 챔피언** | `모름` 입력 → 자동 `unknown` 정규화 |
+| **나쁜 crop** | `잘못됨` 입력 → 자동 `bad` 정규화 |
+| **보드/벤치 형식** | `이름_별개수,이름_별개수,...` (예: `아리_2,야스오_1`) |
+| **빈 보드/벤치** | 그냥 `Enter` 입력 (건너뜀) |
+
+### 한글 입력 정규화
+
+한글로 입력한 챔피언명은 `src/data/champion_aliases.json` 매핑을 통해
+내부적으로 영문 canonical id로 정규화됩니다.
+
+| 입력 (한글) | 정규화 (영문) |
+|------------|--------------|
+| `아리` | `ahri` |
+| `야스오` | `yasuo` |
+| `리 신` | `leesin` |
+| `모름` | `unknown` |
+| `잘못됨` | `bad` |
+| `아리_2,야스오_1` | `ahri_2,yasuo_1` |
+
+> CSV에는 **두 값 모두 저장**됩니다: `label_raw`(한글 원문), `label_normalized`(영문 정규화).
+> 매핑되지 않은 이름은 원본이 그대로 보존됩니다.
+> `champion_aliases.json`은 부분 매핑이며, 라벨링 작업 중 필요시 확장합니다.
 
 ### 레이블 예시
 
-| ROI | 입력 | champion | star_level | label |
+| ROI | 입력 (label_raw) | champion | star_level | label_normalized |
 |-----|------|----------|------------|-------|
-| `shop_slot_1` | `ahri` | ahri | | ahri |
-| `shop_slot_2` | `unknown` | unknown | | unknown |
-| `shop_slot_3` | `bad` | bad | | bad |
-| `my_board` | `ahri_2,yasuo_1,lux_unknown` | ahri,yasuo,lux | 2,1,unknown | ahri_2,yasuo_1,lux_unknown |
-| `my_bench` | `sett_3` | sett | 3 | sett_3 |
+| `shop_slot_1` | `아리` | ahri | | ahri |
+| `shop_slot_2` | `모름` | unknown | | unknown |
+| `shop_slot_3` | `잘못됨` | bad | | bad |
+| `my_board` | `아리_2,야스오_1,럭스_unknown` | ahri,yasuo,lux | 2,1,unknown | ahri_2,yasuo_1,lux_unknown |
+| `my_bench` | `세트_3` | sett | 3 | sett_3 |
 | `player_gold` | `12` | | | 12 |
 | `stage_info` | `2-1` | | | 2-1 |
 
