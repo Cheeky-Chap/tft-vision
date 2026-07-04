@@ -1,11 +1,8 @@
 """
 ROI 영역 정의 — 화면 영역별 식별자와 좌표.
 
-1920x1080 해상도 TFT 기본 기준 (game frame 기준).
-실제 game frame 이미지로 좌표 보정 필요시 수정.
-
-각 ROI는 단일 UI 정보 요소를 캡처하도록 설계.
-player_hud 영역은 레벨/경험치/골드/체력/연승으로 세분화.
+1920x1080 game frame 기준.
+좌표는 실제 captures/game/*.png 이미지로 보정 완료.
 """
 
 from dataclasses import dataclass
@@ -35,39 +32,32 @@ class Region:
         return (self.x1, self.y1, self.x2, self.y2)
 
 
-# --- 기본 ROI 정의 (1920x1080 game frame 기준) ---
-# 좌표는 임시값 — captures/game 이미지로 직접 보정 필요
+# --- ROI 정의 (1920x1080 game frame 기준, captures/game 보정 완료) ---
 ROI_REGIONS = {
-    # ── 플레이어 HUD (좌측 상단) ──
-    # 레벨 (레벨 숫자 hexagon)
-    "player_level":   Region("player_level",   20,  20,  70,  60),
-    # 골드 (골드 아이콘 + 보유량)
-    "player_gold":    Region("player_gold",    75,  20, 155,  60),
-    # 체력 (HP 바 + 숫자)
-    "player_hp":      Region("player_hp",     160,  20, 260,  60),
-    # 경험치 XP 바 (레벨/골드 아래)
-    "player_xp":      Region("player_xp",      20,  65, 260,  92),
-    # 연승/연패 스트릭 표시
-    "player_streak":  Region("player_streak",   20,  95, 260, 120),
+    # ── 좌측 아이템/장비 영역 ──
+    "item_area":      Region("item_area",        0, 270,  110, 780),
 
-    # ── 전체 HUD 디버깅용 (위 세분화 ROI를 포함하는 큰 영역) ──
-    "player_hud_debug": Region("player_hud_debug", 20, 20, 260, 120),
-
-    # ── 게임 필드 ──
-    "my_board":       Region("my_board",       320, 240, 1600, 680),
-    "bench":          Region("bench",          320, 880, 1600, 940),
-    "item_bench":     Region("item_bench",     120, 880,  320, 1020),
+    # ── 플레이어 HUD (하단 정보) ──
+    "player_level":   Region("player_level",   260, 870,  470, 920),
+    "player_gold":    Region("player_gold",    910, 880, 1040, 920),
+    "player_streak":  Region("player_streak", 1040, 870, 1120, 920),
 
     # ── 상점 ──
-    "shop":           Region("shop",           360, 940, 1560, 1020),
+    "shop":           Region("shop",           470, 920, 1490, 1080),
 
-    # ── 정보 ──
-    "stage_info":     Region("stage_info",     800,  10, 1120,   60),
-    "opponent_list":  Region("opponent_list", 1640, 100, 1900,  980),
+    # ── 스테이지 정보 (상단 중앙) ──
+    "stage_info":     Region("stage_info",     730,   0, 1180,  40),
 
-    # ── 이벤트 ──
-    "augment_choice": Region("augment_choice", 200, 300, 1720,  800),
-    "carousel":       Region("carousel",       200, 200, 1720,  880),
+    # ── 상대 목록 (우측) ──
+    "player_list":    Region("player_list",   1620, 180, 1920, 800),
+
+    # ── 상대 필드 ──
+    "enemy_bench":    Region("enemy_bench",    550,  55, 1350, 190),
+    "enemy_board":    Region("enemy_board",    520, 195, 1380, 430),
+
+    # ── 내 필드 ──
+    "my_board":       Region("my_board",       450, 425, 1460, 760),
+    "my_bench":       Region("my_bench",       350, 760, 1410, 890),
 
     # ── 전체 ──
     "full_screen":    Region("full_screen",      0,   0, 1920, 1080),
