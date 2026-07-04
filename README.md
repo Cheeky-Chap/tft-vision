@@ -29,7 +29,8 @@
 # ├── data/                # 챔피언 매핑 등 정적 데이터
 # │   └── champion_aliases.json  # 한글→영문 챔피언명 매핑
 # ├── tools/               # CLI 도구
-# │   └── label_samples.py # 수동 데이터 레이블링
+# │   ├── label_samples.py # 수동 데이터 레이블링 (이미지 전체)
+# │   └── label_units.py   # Unit-level 라벨링 (체력바 클릭)
 # ├── collector/            # 데이터 수집 (신규)
 # │   └── sample_collector.py  # --sample-run 세션 관리
 # ├── config/               # 설정
@@ -432,6 +433,76 @@ python -m src.tools.label_samples samples/session_20260704_153000 --shop
 
 > `labels.csv`는 `samples/` 하위 폴더 내에 생성되며, `.gitignore`에 포함되어
 > commit되지 않습니다.
+
+## Unit-level 보드/벤치 라벨링 (label_units)
+
+보드/벤치 crop 이미지에서 기물의 **체력바 중심**을 클릭하여 unit-level 데이터를 수집합니다.
+직접 찍은 좌표는 이후 자동 체력바 감지 모델의 학습 데이터로 활용됩니다.
+
+```powershell
+# 내 보드 라벨링
+python -m src.tools.label_units samples/session_xxx/my_board --roi my_board
+
+# 내 벤치 라벨링
+python -m src.tools.label_units samples/session_xxx/my_bench --roi my_bench
+
+# 상대 보드/벤치
+python -m src.tools.label_units samples/session_xxx/enemy_board --roi enemy_board
+python -m src.tools.label_units samples/session_xxx/enemy_bench --roi enemy_bench
+```
+
+### 조작법
+
+| 입력 | 동작 |
+|------|------|
+| **좌클릭** | 체력바 중심 좌표 선택 → 터미널에서 정보 입력 |
+| **n** | 현재 이미지 완료 후 다음 이미지 |
+| **q** | 저장 후 종료 |
+| **Esc** | 즉시 종료 |
+| **u** (터미널) | 마지막 입력 취소 |
+
+### 라벨링 흐름
+
+1. 이미지가 OpenCV 창에 표시됨
+2. 기물의 **체력바 중심** (초록색 막대 가운데)을 좌클릭
+3. 터미널에서 순서대로 입력
+4. champion: 한글/영문 챔피언명 (Enter=취소, u=undo)
+5. star_level: 1 / 2 / 3 / unknown
+6. items: 아이템 (쉼표로 여러 개, 없으면 Enter)
+7. notes: 메모 (선택)
+8. 저장 후 같은 이미지에서 계속 클릭 가능
+9. 모든 기물을 클릭했으면 `n` 입력 (또는 키보드 n)
+10. 직전 입력 실수 시 champion 프롬프트에서 `u` 입력
+
+### CSV 컬럼
+
+| 컬럼 | 설명 |
+|------|------|
+| `image_path` | 이미지 파일명 |
+| `roi` | ROI 이름 |
+| `champion_raw` | 사용자 입력 원본 (한글 보존) |
+| `champion_normalized` | 정규화된 영문 ID |
+| `star_level` | 별 개수 (1/2/3/unknown) |
+| `healthbar_x` | 체력바 중심 X 좌표 (원본 해상도) |
+| `healthbar_y` | 체력바 중심 Y 좌표 (원본 해상도) |
+| `items` | 아이템 (쉼표 구분) |
+| `notes` | 추가 메모 |
+| `created_at` | 라벨링 시각 |
+
+> ⚠️ **중요: 기물 몸통이 아니라 체력바 중심을 클릭해야 합니다.**
+> 체력바는 기물 상단에 있는 초록색 막대로, 그 막대의 정중앙을 클릭합니다.
+> 이후 자동 체력바 감지 모델 학습에 이 좌표가 사용됩니다.
+> 정확성이 애매하면 가급적 체력바 범위 내에서 중앙에 가깝게 클릭합니다.
+
+### `label_samples` vs `label_units` 비교
+
+| 항목 | label_samples | label_units |
+|------|--------------|-------------|
+| 대상 ROI | shop_card, player_gold, stage_info 등 | my_board, my_bench, enemy_board, enemy_bench |
+| 입력 방식 | 텍스트로 기재 | 체력바 클릭 + 텍스트 |
+| 레이블 단위 | 이미지 전체 | 이미지 내 개별 기물 |
+| 좌표 | 없음 | healthbar_x, healthbar_y |
+| 주 용도 | OCR/숫자 인식 | 기물 위치 + 속성 인식 |
 
 ## 지원 ROI 목록
 
