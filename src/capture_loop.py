@@ -104,6 +104,10 @@ def main():
         "--sample-run", action="store_true",
         help="샘플 수집 모드: samples/session_*/ 에 game + ROI crop 저장",
     )
+    parser.add_argument(
+        "--manual", action="store_true",
+        help="수동 캡처 모드: Enter 입력 시 1장 캡처, q=종료, qq=즉시종료",
+    )
     args = parser.parse_args()
 
     # 모니터 인덱스 및 게임 영역 결정
@@ -187,8 +191,42 @@ def main():
                 "Sample collection active → %s", sample_collector.session_path,
             )
 
+        # Manual mode: interval 무시, count 무한, 사용자 입력 기반
+        if args.manual:
+            logger.info(
+                "Manual capture mode | interval ignored, captures triggered by Enter"
+            )
+            if args.count != 1:
+                logger.info(
+                    "Manual mode: --count=%d ignored (user controls via q/qq)",
+                    args.count,
+                )
+            if abs(args.interval - 1.0) > 0.001:
+                logger.info(
+                    "Manual mode: --interval=%.1f ignored", args.interval,
+                )
+            args.count = 0  # infinite — q/qq만이 종료 조건
+
         count = 0
         while args.count == 0 or count < args.count:
+            # Manual mode: 사용자 입력 대기 (capture 전)
+            if args.manual:
+                try:
+                    inp = input(
+                        f"\n[{count + 1}] Enter=캡처, q=종료, qq=즉시종료: ",
+                    ).strip().lower()
+                except (EOFError, KeyboardInterrupt):
+                    logger.info("Manual capture 중단")
+                    break
+                if inp == "q":
+                    logger.info("Manual capture 저장 후 종료")
+                    break
+                if inp == "qq":
+                    logger.info("Manual capture 즉시 종료")
+                    break
+                if inp:  # Enter 이외의 입력 → 다시 프롬프트
+                    continue
+
             count += 1
 
             # 1) 전체 모니터 캡처
@@ -265,9 +303,10 @@ def main():
                         len(saved) - 1,
                     )
 
-            # 다음 캡처까지 대기
-            if args.count == 0 or count < args.count:
-                time.sleep(args.interval)
+            # 다음 캡처까지 대기 (manual 모드에서는 생략)
+            if not args.manual:
+                if args.count == 0 or count < args.count:
+                    time.sleep(args.interval)
 
         logger.info("MVP 1 완료 — 총 %d 캡처", count)
 

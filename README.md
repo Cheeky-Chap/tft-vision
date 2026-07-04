@@ -180,6 +180,37 @@
 # | `--no-save` | 저장 없이 메모리만 처리 |
 # | `--debug-roi` | ROI 검증용 overlay + contact sheet 생성 |
 # | `--sample-run` | OCR 학습용 샘플 데이터 수집 (samples/session_*/) |
+# | `--manual` | 수동 캡처 모드: Enter=캡처, q=종료, qq=즉시종료 |
+#
+# ## 수동 캡처 모드 (--manual)
+#
+# 자동 interval 캡처 대신, 사용자가 Enter를 누를 때마다 1장씩 캡처합니다.
+#
+# ```powershell
+# # 기본 수동 캡처
+# python -m src.capture_loop --monitor 2 --game-region 320,180,1920,1080 --manual
+#
+# # 수동 캡처 + 샘플 수집
+# python -m src.capture_loop --monitor 2 --game-region 320,180,1920,1080 --sample-run --manual
+#
+# # 수동 캡처 + ROI 검증
+# python -m src.capture_loop --monitor 2 --game-region 320,180,1920,1080 --debug-roi --manual
+# ```
+#
+# ### 동작 방식
+#
+# ```
+# [1] Enter=캡처, q=종료, qq=즉시종료:   ← Enter 입력 → 캡처 1회
+# [2] Enter=캡처, q=종료, qq=즉시종료:   ← Enter 입력 → 캡처 2회
+# [3] Enter=캡처, q=종료, qq=즉시종료: q ← 저장 후 종료
+# ```
+#
+# - **Enter**: 현재 프레임 캡처 (captures/, crops/, samples/ 등 저장)
+# - **q**: 저장 후 종료 (로그 메시지 출력)
+# - **qq**: 즉시 종료
+# - **Ctrl+C**: 안전하게 중단
+# - `--interval`, `--count` 옵션은 무시됨 (사용자 입력 기반)
+# - `--sample-run`, `--debug-roi`와 함께 사용 가능
 #
 # ## ROI 검증 (--debug-roi)
 #
