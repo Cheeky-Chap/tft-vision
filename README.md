@@ -14,9 +14,11 @@
 # │   ├── crop/             # ROI crop 모듈
 # │   │   ├── roi_definitions.py
 # │   │   ├── cropper.py
-# │   │   └── game_region.py    # ← NEW: 게임 영역 crop
-# │   └── config/           # 설정
-# │       └── settings.py
+# │   │   └── game_region.py
+# │   └── visualization/    # 시각화/디버그
+# │       └── debug_roi.py  # ROI overlay + contact sheet
+# ├── config/               # 설정
+# │   └── settings.py
 # ├── captures/             # 원본 캡처 (git 제외)
 # │   └── game/             # game region crop 결과 (git 제외)
 # ├── crops/                # ROI crop 결과 (git 제외)
@@ -31,6 +33,9 @@
 # │   ├── enemy_board/
 # │   ├── my_board/
 # │   └── my_bench/
+# ├── debug/                # ROI 검증 이미지 (git 제외)
+# │   ├── roi_overlay/      #   ROI 사각형이 그려진 game frame
+# │   └── contact_sheet/    #   모든 crop을 한 장에 합친 이미지
 # ├── logs/                 # 실행 로그 (git 제외)
 # ├── requirements.txt
 # ├── .gitignore
@@ -153,6 +158,27 @@
 # | `--capture-only` | ROI crop 없이 원본만 저장 |
 # | `--preview` | ROI crop 결과 창 표시 |
 # | `--no-save` | 저장 없이 메모리만 처리 |
+# | `--debug-roi` | ROI 검증용 overlay + contact sheet 생성 |
+#
+# ## ROI 검증 (--debug-roi)
+#
+# `--debug-roi` 옵션으로 ROI 좌표가 올바른지 시각적으로 확인할 수 있습니다.
+#
+# ```powershell
+# python -m src.capture_loop --monitor 2 --game-region 320,180,1920,1080 --debug-roi
+# ```
+#
+# ### 생성되는 파일
+#
+# **debug/roi_overlay/ — ROI 오버레이**
+# game frame 위에 모든 ROI 사각형과 이름이 그려진 이미지.
+# 각 ROI가 올바른 위치를 커버하는지 한눈에 확인 가능.
+#
+# **debug/contact_sheet/ — ROI 접촉 시트**
+# 모든 ROI crop 결과를 한 장의 이미지로 합친 contact sheet.
+# 각 crop이 어떤 ROI에 해당하는지, UI 요소가 정확히 잘렸는지 확인 가능.
+#
+# > `debug/` 폴더는 `.gitignore`에 포함되어 commit되지 않습니다.
 #
 # ## ROI 목록
 #

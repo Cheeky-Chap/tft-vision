@@ -96,6 +96,10 @@ def main():
         help="게임 영역 LEFT,TOP,WIDTH,HEIGHT (예: 320,180,1920,1080). "
              "설정 시 모니터 전체 대신 게임 영역만 crop 후 ROI 분석",
     )
+    parser.add_argument(
+        "--debug-roi", action="store_true",
+        help="ROI 검증용 overlay + contact sheet 생성 (debug/ 폴더)",
+    )
     args = parser.parse_args()
 
     # 모니터 인덱스 및 게임 영역 결정
@@ -216,6 +220,23 @@ def main():
                         import cv2
                         cv2.imshow(f"ROI: {name}", img_crop)
                     cv2.waitKey(1)
+
+                # 4) Debug ROI (--debug-roi)
+                if args.debug_roi:
+                    from src.visualization.debug_roi import (
+                        draw_roi_overlay,
+                        create_contact_sheet,
+                    )
+
+                    # Overlay: ROI 박스가 그려진 game frame
+                    overlay_path = draw_roi_overlay(frame_for_roi)
+                    logger.info("  Debug overlay: %s", overlay_path)
+
+                    # Contact sheet: 모든 crop을 한 장에
+                    crop_images = cropper.crop_all(frame_for_roi)
+                    sheet_path = create_contact_sheet(crop_images)
+                    if sheet_path:
+                        logger.info("  Debug contact sheet: %s", sheet_path)
 
             # 다음 캡처까지 대기
             if args.count == 0 or count < args.count:
