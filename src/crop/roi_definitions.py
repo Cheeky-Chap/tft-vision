@@ -52,12 +52,12 @@ ROI_REGIONS = {
     "player_list":    Region("player_list",   1620, 180, 1920, 800),
 
     # ── 상대 필드 ──
-    "enemy_bench":    Region("enemy_bench",    550,  55, 1350, 190),
-    "enemy_board":    Region("enemy_board",    520, 115, 1380, 430),
+    "enemy_bench":    Region("enemy_bench",    550,  35, 1350, 170),
+    "enemy_board":    Region("enemy_board",    520,  95, 1380, 410),
 
     # ── 내 필드 ──
-    "my_board":       Region("my_board",       450, 375, 1460, 760),
-    "my_bench":       Region("my_bench",       350, 680, 1410, 890),
+    "my_board":       Region("my_board",       450, 345, 1460, 730),
+    "my_bench":       Region("my_bench",       350, 680, 1410, 870),
 
     # ── 전체 ──
     "full_screen":    Region("full_screen",      0,   0, 1920, 1080),
