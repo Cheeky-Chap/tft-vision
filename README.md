@@ -291,7 +291,12 @@
 # ├── shop_slot_5/          # 상점 슬롯 5 crop
 # ├── player_gold/          # 골드 crop
 # ├── player_level/         # 레벨 crop
+# ├── player_streak/        # 연승/연패 스트릭 crop
 # ├── stage_info/           # 라운드/스테이지 crop
+# ├── item_area/            # 좌측 아이템/장비 영역 crop
+# ├── player_list/          # 상대 목록 crop
+# ├── enemy_board/          # 상대 보드 crop
+# ├── enemy_bench/          # 상대 벤치 crop
 # ├── my_board/             # 내 보드 crop
 # └── my_bench/             # 내 벤치 crop
 # ```

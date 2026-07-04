@@ -24,7 +24,12 @@ SAMPLE_ROIS = [
     "shop_slot_5",
     "player_gold",
     "player_level",
+    "player_streak",
     "stage_info",
+    "item_area",
+    "player_list",
+    "enemy_board",
+    "enemy_bench",
     "my_board",
     "my_bench",
 ]
