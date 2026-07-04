@@ -17,6 +17,7 @@ import argparse
 import logging
 import time
 import sys
+import os
 from datetime import datetime
 from pathlib import Path
 
@@ -29,6 +30,10 @@ logger = logging.getLogger("tft-vision")
 
 def main():
     parser = argparse.ArgumentParser(description="TFT Vision MVP 1 — Capture & ROI Crop")
+    parser.add_argument(
+        "--list-monitors", action="store_true",
+        help="사용 가능한 모니터 목록 출력 (index, 좌표, 해상도)",
+    )
     parser.add_argument(
         "--interval", type=float, default=1.0,
         help="캡처 간격 (초, 기본 1.0)",
@@ -49,7 +54,28 @@ def main():
         "--no-save", action="store_true",
         help="저장하지 않고 메모리만 처리",
     )
+    parser.add_argument(
+        "--monitor", type=int, default=None,
+        help="캡처할 모니터 인덱스 (기본: .env의 MONITOR_INDEX 또는 1)",
+    )
     args = parser.parse_args()
+
+    # 모니터 인덱스 결정: --monitor > .env MONITOR_INDEX > 기본 1
+    monitor_index = args.monitor
+    if monitor_index is None:
+        try:
+            from dotenv import load_dotenv
+            load_dotenv()
+        except ImportError:
+            pass
+        env_val = os.environ.get("MONITOR_INDEX") or os.getenv("MONITOR_INDEX")
+        if env_val is not None:
+            try:
+                monitor_index = int(env_val)
+            except (ValueError, TypeError):
+                monitor_index = 1
+        else:
+            monitor_index = 1
 
     # Windows 환경 확인
     try:
@@ -59,16 +85,34 @@ def main():
             "Windows 전용 모듈을 불러올 수 없습니다.\n"
             "Windows 노트북에서 실행하세요:\n"
             "  cd tft-vision\n"
-            "  .venv\\Scripts\\Activate.ps1\n"
+            "  .venv\Scripts\Activate.ps1\n"
             "  pip install -r requirements.txt\n"
             "  python -m src.capture_loop"
         )
         sys.exit(1)
 
+    # --list-monitors: 모니터 목록 출력 후 종료
+    if args.list_monitors:
+        monitors = ScreenCapture.list_monitors()
+        print(f"\n{'Index':>5}  {'Left':>5}  {'Top':>5}  {'Width':>6}  {'Height':>6}  Name")
+        print(f"{'─'*5}  {'─'*5}  {'─'*5}  {'─'*6}  {'─'*6}  {'─'*30}")
+        for m in monitors:
+            print(
+                f"{m['index']:>5}  {m['left']:>5}  {m['top']:>5}  "
+                f"{m['width']:>6}  {m['height']:>6}  {m['name']}"
+            )
+        print()
+        print("TIP: .env 파일에서 MONITOR_INDEX 값을 바꿔서 캡처할 모니터를 선택하세요.")
+        print("     MONITOR_INDEX=1 → 첫 번째 모니터 (기본)")
+        print("     MONITOR_INDEX=2 → 두 번째 모니터")
+        print("     MONITOR_INDEX=0 → 전체 가상 데스크톱 (모든 모니터)")
+        sys.exit(0)
+
     try:
-        cap = ScreenCapture(monitor_index=1, save_dir="captures")
+        cap = ScreenCapture(monitor_index=monitor_index, save_dir="captures")
         logger.info(
-            "MVP 1 시작 | interval=%.1fs count=%s preview=%s",
+            "MVP 1 시작 | monitor=%d interval=%.1fs count=%s preview=%s",
+            monitor_index,
             args.interval,
             "∞" if args.count == 0 else str(args.count),
             args.preview,

@@ -14,7 +14,7 @@ class CaptureSettings:
     """캡처 관련 설정."""
 
     # 모니터/디스플레이
-    monitor_index: int = 1            # 1 = 주모니터
+    monitor_index: int = 1            # 1 = 첫 번째 모니터, 2 = 두 번째, 0 = 전체 가상 데스크톱
     target_resolution: tuple = (1920, 1080)
 
     # 캡처 간격 (초)

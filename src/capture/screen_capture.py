@@ -55,11 +55,52 @@ class ScreenCapture:
         self.save_dir = Path(save_dir)
         self.save_dir.mkdir(parents=True, exist_ok=True)
         self._sct = mss.mss()
+        info = self._get_monitor_info()
         logger.info(
-            "ScreenCapture initialized | monitor=%d save=%s",
-            monitor_index,
+            "ScreenCapture initialized | monitor=%d left=%d top=%d %dx%d save=%s",
+            info["index"],
+            info["left"],
+            info["top"],
+            info["width"],
+            info["height"],
             self.save_dir,
         )
+
+    @staticmethod
+    def list_monitors() -> list[dict]:
+        """사용 가능한 모니터 목록 반환.
+
+        Returns:
+            [ {index, left, top, width, height, name}, ... ]
+            index 0 = 전체 가상 데스크톱 (all monitors combined)
+            index 1 = 첫 번째 모니터
+            index 2 = 두 번째 모니터 ...
+        """
+        import mss as _mss
+
+        monitors = []
+        with _mss.mss() as sct:
+            for i, m in enumerate(sct.monitors):
+                monitors.append({
+                    "index": i,
+                    "left": m["left"],
+                    "top": m["top"],
+                    "width": m["width"],
+                    "height": m["height"],
+                    "name": f"Monitor {i}" if i > 0 else "Virtual Desktop (all)",
+                })
+        return monitors
+
+    def _get_monitor_info(self) -> dict:
+        """현재 선택된 모니터의 정보."""
+        monitor = self._sct.monitors[self.monitor_index]
+        return {
+            "index": self.monitor_index,
+            "left": monitor["left"],
+            "top": monitor["top"],
+            "width": monitor["width"],
+            "height": monitor["height"],
+        }
 
     def capture(self) -> np.ndarray:
         """전체 화면 캡처 → numpy array (H, W, BGR)."""
