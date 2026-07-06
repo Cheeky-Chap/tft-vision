@@ -393,7 +393,7 @@ class LabelingConfig:
         self.is_combined: bool = False   # 여러 폴더 통합 여부
 
 
-def resolve_config(args) -> LabelingConfig:
+def resolve_config(args, parser) -> LabelingConfig:
     cfg = LabelingConfig()
     cfg.overwrite = args.overwrite
     cfg.no_display = args.no_display
@@ -447,7 +447,6 @@ def resolve_config(args) -> LabelingConfig:
 
 
 def main():
-    global parser
     parser = argparse.ArgumentParser(
         description="TFT Vision — 수동 데이터 레이블링 도구 (다중 폴더 지원)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -473,9 +472,8 @@ def main():
         help="이미지 표시 창 없이 경로만 출력",
     )
     args = parser.parse_args()
-    global parser
 
-    cfg = resolve_config(args)
+    cfg = resolve_config(args, parser)
     assert cfg.csv_path is not None, "Internal error: csv_path not resolved"
     aliases = _load_aliases()
     prompt_fn = PROMPT_DISPATCH[cfg.mode]
