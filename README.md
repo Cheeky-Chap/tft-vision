@@ -30,7 +30,8 @@
 # │   └── champion_aliases.json  # 한글→영문 챔피언명 매핑
 # ├── tools/               # CLI 도구
 # │   ├── label_samples.py # 수동 데이터 레이블링 (이미지 전체)
-# │   └── label_units.py   # Unit-level 라벨링 (체력바 클릭)
+# │   ├── label_units.py   # Unit-level 라벨링 (체력바 클릭)
+# │   └── dedupe_samples.py# 샘플 중복 제거 (SHA256 + perceptual hash)
 # ├── collector/            # 데이터 수집 (신규)
 # │   └── sample_collector.py  # --sample-run 세션 관리
 # ├── config/               # 설정
@@ -565,11 +566,63 @@ python -m src.tools.label_units samples/session_xxx/enemy_bench --roi enemy_benc
 - `shop` 전체 영역을 5등분 (각 슬롯 204×160)
 - 각 슬롯은 개별 폴더에 저장: `crops/shop_slot_1/` ~ `crops/shop_slot_5/`
 - OCR/챔피언 이름 인식은 아직 구현 전
-- `--debug-roi` contact sheet에서 각 슬롯 crop 결과 확인 가능
-
-## 주의사항
-- TFT 게임이 **전체화면(1920x1080)** 또는 **테두리 없는 창모드** 상태여야 함
-- 듀얼 모니터일 경우 `--list-monitors`로 TFT 실행 모니터 확인 후 MONITOR_INDEX 설정
+# - `--debug-roi` contact sheet에서 각 슬롯 crop 결과 확인 가능
+#
+# ## 샘플 중복 제거 (dedupe_samples)
+#
+# 수집된 샘플 데이터에서 중복 이미지를 정리합니다.
+# **라벨링 완료된 이미지는 기본적으로 보호**됩니다 (--include-labeled로 해제).
+#
+# ### 사용법
+#
+# ```powershell
+# # Dry-run (기본)
+# python -m src.tools.dedupe_samples samples/session_xxx
+#
+# # 중복 파일 이동
+# python -m src.tools.dedupe_samples samples/session_xxx --move-duplicates
+#
+# # 상점 통합 중복 검사
+# python -m src.tools.dedupe_samples samples/session_xxx --shop --move-duplicates
+#
+# # 라벨링된 이미지도 포함
+# python -m src.tools.dedupe_samples samples/session_xxx --move-duplicates --include-labeled
+#
+# # 임계값 조정 (기본 5)
+# python -m src.tools.dedupe_samples samples/session_xxx --threshold 10
+# ```
+#
+# ### 중복 판정
+#
+# | 단계 | 방식 | 설명 |
+# |------|------|------|
+# | 1차 | SHA256 | 완전 동일 파일 검출 |
+# | 2차 | Average hash | 8×8 축소 → 평균 기반 유사도 |
+#
+# - `--threshold 0`: exact match만
+# - `--threshold 5` (기본): 약간 차이까지 유사 중복
+# - OpenCV 미설치 시 SHA256만 동작 (fallback)
+#
+# ### --shop 옵션
+# shop_slot_1~5를 shop_card로 통합하여 중복 검사.
+# 같은 챔피언 카드가 여러 슬롯에 중복 수집된 경우 검출.
+#
+# ### 라벨 보호
+# - labels.csv 등록 이미지는 이동하지 않음 (기본)
+# - `--include-labeled`로 해제 가능
+#
+# ### 동작
+# - 기본 dry-run: 출력만 + duplicates_report.csv 저장
+# - `--move-duplicates`: `_duplicates/ROI_NAME/`로 이동
+#
+# ### 리포트 컬럼
+# original_path, duplicate_path, roi, similarity_score, action, created_at
+#
+# > samples/와 _duplicates/는 .gitignore로 보호됩니다.
+#
+# ## 주의사항
+# - TFT 게임이 **전체화면(1920x1080)** 또는 **테두리 없는 창모드** 상태여야 함
+# - 듀얼 모니터일 경우 `--list-monitors`로 TFT 실행 모니터 확인 후 MONITOR_INDEX 설정
 - 게임 영역 좌표는 **모니터 절대 좌표** 기준 (--list-monitors로 모니터 left/top 확인)
 - `.env`에 캡처 핫키/딜레이/모니터 설정 가능
 - 개인 스크린샷, 토큰, API key는 절대 commit 금지
