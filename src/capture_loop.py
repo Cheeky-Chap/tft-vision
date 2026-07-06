@@ -11,6 +11,9 @@ TFT Vision MVP 1 — Capture + ROI Crop.
 
     캡처만:
         python -m src.capture_loop --capture-only
+
+    핫키 캡처 (D 키 누를 때마다):
+        python -m src.capture_loop --monitor 2 --game-region 320,180,1920,1080 --sample-run --hotkey d
 """
 
 import argparse
@@ -18,6 +21,7 @@ import logging
 import time
 import sys
 import os
+import queue
 from datetime import datetime
 from pathlib import Path
 
@@ -108,6 +112,11 @@ def main():
         "--manual", action="store_true",
         help="수동 캡처 모드: Enter 입력 시 1장 캡처, q=종료, qq=즉시종료",
     )
+    parser.add_argument(
+        "--hotkey", type=str, default=None,
+        help="핫키 캡처 모드: 지정한 키를 누를 때 1장 캡처 (예: --hotkey d). "
+             "q=종료, Esc=즉시종료",
+    )
     args = parser.parse_args()
 
     # 모니터 인덱스 및 게임 영역 결정
@@ -122,11 +131,16 @@ def main():
             "Windows 전용 모듈을 불러올 수 없습니다.\n"
             "Windows 노트북에서 실행하세요:\n"
             "  cd tft-vision\n"
-            "  .venv\Scripts\Activate.ps1\n"
+            r"  .venv\Scripts\Activate.ps1" "\n"
             "  pip install -r requirements.txt\n"
             "  python -m src.capture_loop"
         )
         sys.exit(1)
+
+    # Hotkey capture mode 변수 초기화 (try 블록 진입 전)
+    hotkey_queue: queue.Queue | None = None
+    hotkey_listener = None
+    last_capture_time = 0.0
 
     # --list-monitors: 모니터 목록 출력 후 종료
     if args.list_monitors:
@@ -207,6 +221,58 @@ def main():
                 )
             args.count = 0  # infinite — q/qq만이 종료 조건
 
+        # Hotkey capture mode
+        if args.hotkey:
+            if args.manual:
+                parser.error("--hotkey와 --manual은 동시에 사용할 수 없습니다.")
+            try:
+                from pynput import keyboard
+            except ImportError:
+                logger.error(
+                    "pynput이 설치되지 않았습니다.\n"
+                    "  pip install pynput\n"
+                )
+                sys.exit(1)
+
+            hotkey_key = args.hotkey.strip().lower()
+            if len(hotkey_key) != 1:
+                parser.error("--hotkey는 단일 문자여야 합니다 (예: d)")
+
+            hotkey_queue = queue.Queue()
+
+            def _on_hotkey_press(key):
+                try:
+                    k = key.char.lower()
+                except AttributeError:
+                    k = None
+                try:
+                    if k == hotkey_key:
+                        hotkey_queue.put_nowait("capture")
+                    elif k == "q":
+                        hotkey_queue.put_nowait("quit")
+                    elif key == keyboard.Key.esc:
+                        hotkey_queue.put_nowait("quit")
+                except Exception:
+                    pass
+
+            hotkey_listener = keyboard.Listener(on_press=_on_hotkey_press)
+            hotkey_listener.start()
+
+            logger.info(
+                "Hotkey capture active | key=%s  |  '%s'=capture, q=quit, Esc=immediate",
+                hotkey_key, hotkey_key,
+            )
+            if args.count != 1:
+                logger.info(
+                    "Hotkey mode: --count=%d ignored (user controls via keys)",
+                    args.count,
+                )
+            if abs(args.interval - 1.0) > 0.001:
+                logger.info(
+                    "Hotkey mode: --interval=%.1f ignored", args.interval,
+                )
+            args.count = 0  # infinite — q/esc만이 종료 조건
+
         count = 0
         while args.count == 0 or count < args.count:
             # Manual mode: 사용자 입력 대기 (capture 전)
@@ -226,6 +292,21 @@ def main():
                     break
                 if inp:  # Enter 이외의 입력 → 다시 프롬프트
                     continue
+
+            # Hotkey mode: 키 이벤트 폴링 (background listener에서 queue에 넣음)
+            if args.hotkey:
+                try:
+                    cmd = hotkey_queue.get(timeout=0.1)
+                except queue.Empty:
+                    continue
+                if cmd == "quit":
+                    logger.info("Hotkey capture 종료")
+                    break
+                if cmd == "capture":
+                    now = time.time()
+                    if now - last_capture_time < 0.3:
+                        continue  # debounce
+                    last_capture_time = now
 
             count += 1
 
@@ -303,8 +384,8 @@ def main():
                         len(saved) - 1,
                     )
 
-            # 다음 캡처까지 대기 (manual 모드에서는 생략)
-            if not args.manual:
+            # 다음 캡처까지 대기 (manual/hotkey 모드에서는 생략)
+            if not args.manual and not args.hotkey:
                 if args.count == 0 or count < args.count:
                     time.sleep(args.interval)
 
@@ -316,6 +397,9 @@ def main():
         logger.exception("치명적 오류: %s", e)
         sys.exit(1)
     finally:
+        if hotkey_listener is not None:
+            hotkey_listener.stop()
+            logger.debug("Hotkey listener stopped")
         if args.preview:
             import cv2
             cv2.destroyAllWindows()

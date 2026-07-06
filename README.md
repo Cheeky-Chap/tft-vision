@@ -184,6 +184,7 @@
 # | `--debug-roi` | ROI 검증용 overlay + contact sheet 생성 |
 # | `--sample-run` | OCR 학습용 샘플 데이터 수집 (samples/session_*/) |
 # | `--manual` | 수동 캡처 모드: Enter=캡처, q=종료, qq=즉시종료 |
+# | `--hotkey KEY` | 핫키 캡처 모드: KEY를 누를 때 1장 캡처 (예: d), q=종료, Esc=즉시종료 |
 #
 # ## 수동 캡처 모드 (--manual)
 #
@@ -214,6 +215,33 @@
 # - **Ctrl+C**: 안전하게 중단
 # - `--interval`, `--count` 옵션은 무시됨 (사용자 입력 기반)
 # - `--sample-run`, `--debug-roi`와 함께 사용 가능
+#
+# ## 핫키 캡처 모드 (--hotkey)
+#
+# `--hotkey` 옵션으로 게임 플레이 중 특정 키를 누를 때마다 자동으로 캡처합니다.
+# **프로그램이 키를 대신 누르지 않습니다** — 사용자가 직접 누른 키를 감지해서 캡처만 합니다.
+# 자동 리롤/자동 구매/자동 클릭 기능은 없습니다.
+#
+# ```powershell
+# # D 키를 누를 때마다 1장 캡처 (게임 영역 + 샘플 수집)
+# python -m src.capture_loop --monitor 2 --game-region 320,180,1920,1080 --sample-run --hotkey d
+#
+# # 다른 키로 캡처 (예: F5)
+# python -m src.capture_loop --monitor 2 --sample-run --hotkey f5
+# ```
+#
+# > ⚠️ `--hotkey`는 `--manual`과 동시에 사용할 수 없습니다.
+#
+# ### 동작 방식
+#
+# - **pynput** 글로벌 키 리스너 사용 — 게임 창이 포커스된 상태에서도 키 감지 가능
+# - 백그라운드 스레드에서 키 입력을 감지하고 메인 루프에 이벤트 전달
+# - `D` 키 누름 → 1회 캡처 (300ms 디바운스)
+# - `q` 키 → 저장 후 종료
+# - **Esc** → 즉시 종료
+# - `--interval`, `--count` 옵션은 무시됨 (사용자 키 입력 기반)
+# - `--sample-run`, `--debug-roi`와 함께 사용 가능
+# - 자동 조작/판단 기능 없음 — 순수 캡처 도구
 #
 # ## ROI 검증 (--debug-roi)
 #
