@@ -10,6 +10,8 @@ build/
 .venv/
 venv/
 .env
+.env.*
+!.env.example
 
 # Captures & crops (never commit raw game data)
 captures/
@@ -31,7 +33,32 @@ secrets/
 *.auth
 *.token
 *.key
+*.pem
+*.p12
 credentials*
+
+# Databases and runtime state
+*.db
+*.sqlite
+*.sqlite3
+*.log
+*.pid
+positions.json
+state/
+sessions/
+cache/
+tmp/
+backup/
+backups/
+*.tar
+*.tar.gz
+*.zip
+models/
+datasets/
+node_modules/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
 # IDE
 .vscode/

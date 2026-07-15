@@ -1,4 +1,15 @@
 # TFT Vision — Screen Capture & ROI Crop MVP 1
+
+## 저장소와 운영 환경
+
+이 저장소는 Windows 캡처 클라이언트의 소스·정적 챔피언 별칭·도구·문서만
+관리한다. 미니PC의 `/opt/data/projects/tft-vision`과
+`/opt/data/projects/tft`는 동일 커밋을 가진 같은 프로젝트 복제본이며,
+GitHub에서는 하나의 `tft-vision` 저장소만 사용한다.
+
+실제 캡처 이미지, crop, 사람이 작성한 labels, 로그, `.env`, 모델 가중치,
+학습 데이터셋은 저장소에 포함하지 않는다. `hermes-agent`, `trading-bot`,
+Misaka Discord gateway와 실행 의존성은 없다.
 #
 # ## 개요
 # TFT 게임 화면을 캡처하고 관심 영역(ROI)을 추출하는 MVP 1 단계 프로젝트.
