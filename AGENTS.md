@@ -33,3 +33,17 @@ python -m src.capture_loop --help
 
 Screen-capture verification requires a Windows desktop and must not be assumed
 to work in a headless Linux environment.
+
+## Review guidelines
+
+Report only confirmed P0/P1 issues in the actual diff:
+
+- The application cannot start or execute, authentication or authorization is bypassed,
+  secrets are exposed, data is corrupted, recovery or rollback fails, duplicate execution/
+  races/deadlocks are introduced, the issue's core requirement is missing, or a core feature
+  has a severe regression.
+- Treat committed images/captures/datasets/labels/model weights, unapproved automatic clicks
+  or keyboard input, actions based on incorrect screen-state classification, and claims that
+  Windows capture tests passed on Linux as P0/P1 candidates.
+- Ignore style, formatting, naming preferences, optional refactors, minor performance
+  improvements, and wording-only documentation feedback.
