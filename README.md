@@ -72,6 +72,20 @@ python -m src.ingest_video --input D:\videos\game_001.mp4 --output-dir D:\datase
 manifest가 기록한 프레임과 이 도구의 manifest/labels만 교체하고 다른 파일은
 보존한다. `--dedupe-threshold`를 지정하면 연속 프레임의 축소 grayscale 평균
 차이가 임계값 이하일 때 선택적으로 건너뛴다.
+
+### 오프라인 프레임 리뷰
+
+영상 데이터셋의 `manifest.json`, `labels.json`, 선택적인 `analyses.jsonl`을
+외부 네트워크나 CDN 없이 열 수 있는 단일 HTML 갤러리로 만들 수 있다. 분석
+레코드가 아직 없으면 관찰 내용을 추측하지 않는 `pending` 레코드를 먼저 만든다.
+
+```powershell
+python -m src.build_review_report --dataset-dir D:\datasets\game_001 --output D:\datasets\game_001\review.html
+```
+
+템플릿 설명 생성기는 결정적인 한국어 문장을 만들며, 후속 로컬 분석기는
+`FrameAnalysisRecord`에 자체 설명과 출처를 저장할 수 있다. 이미지, 분석 JSONL,
+HTML 결과는 저장소가 아닌 데이터셋 출력 디렉터리에 보관한다.
 #
 # ## 개요
 # TFT 게임 화면을 캡처하고 관심 영역(ROI)을 추출하는 MVP 1 단계 프로젝트.
