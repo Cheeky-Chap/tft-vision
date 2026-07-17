@@ -45,6 +45,8 @@ credentials*
 *.pid
 positions.json
 state/
+!src/state/
+!src/state/*.py
 sessions/
 cache/
 tmp/

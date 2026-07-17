@@ -42,6 +42,21 @@ python -m src.capture_loop --help
 화면 캡처 검증에는 Windows 데스크톱이 필요하다. Headless Linux 환경에서는
 위 명령과 정적 검증을 실행할 수 있지만 Windows 화면 캡처가 성공했다고
 간주해서는 안 된다.
+
+### 오프라인 상태 스냅샷
+
+저장된 ROI crop은 캡처 기능을 실행하지 않고 구조화된 JSON으로 확인할 수 있다.
+입력 디렉터리에는 `player_gold.png`처럼 ROI 이름과 같은 이미지 파일을 두거나,
+`player_gold/` 하위에 지원 이미지 하나를 둔다. 확장자는 PNG, JPG, JPEG이며 한
+ROI에서 여러 후보가 발견되면 해당 ROI는 안전하게 `unavailable`로 표시된다.
+
+```powershell
+python -m src.analyze_crops --input-dir crops --pretty
+python -m src.analyze_crops --input-dir samples/session_xxx/frame_0001 --output state.json
+```
+
+현재 실제 OCR이나 모델 추론은 수행하지 않는다. 읽힌 ROI는 `unknown`, 누락되거나
+읽을 수 없는 ROI는 `unavailable`이며, 후속 인식기는 공통 파이프라인에 등록한다.
 #
 # ## 개요
 # TFT 게임 화면을 캡처하고 관심 영역(ROI)을 추출하는 MVP 1 단계 프로젝트.
