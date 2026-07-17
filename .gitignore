@@ -91,3 +91,5 @@ labels.csv
 *.mov
 *.mkv
 *.webm
+frames/
+videos/
