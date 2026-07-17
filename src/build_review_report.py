@@ -14,7 +14,15 @@ from src.review.report import ReviewReportError, build_report
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Build a dependency-free offline TFT frame review report.")
     parser.add_argument("--dataset-dir", required=True, type=Path, help="directory containing manifest.json and labels.json")
-    parser.add_argument("--output", required=True, type=Path, help="HTML path inside the dataset directory")
+    parser.add_argument(
+        "--output",
+        required=True,
+        type=Path,
+        help=(
+            "HTML file path inside the dataset directory; must not be manifest.json, "
+            "labels.json, the analyses JSONL file, or any frame image path"
+        ),
+    )
     parser.add_argument("--analyses-name", default="analyses.jsonl", help="analysis JSONL filename inside the dataset directory")
     return parser
 
