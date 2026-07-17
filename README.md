@@ -57,6 +57,21 @@ python -m src.analyze_crops --input-dir samples/session_xxx/frame_0001 --output 
 
 현재 실제 OCR이나 모델 추론은 수행하지 않는다. 읽힌 ROI는 `unknown`, 누락되거나
 읽을 수 없는 ROI는 `unavailable`이며, 후속 인식기는 공통 파이프라인에 등록한다.
+
+### 로컬 게임플레이 영상 수집
+
+직접 보유하거나 사용 허가를 받은 로컬 MP4, MKV, MOV, WebM 영상은 일정 간격의
+프레임과 provenance manifest, 사람이 편집할 초기 라벨 JSON으로 변환할 수 있다.
+다운로드나 네트워크 접근은 수행하지 않으며 출력 경로는 저장소 밖을 사용한다.
+
+```powershell
+python -m src.ingest_video --input D:\videos\game_001.mp4 --output-dir D:\datasets\game_001 --interval-seconds 2 --source-id game_001 --usage-rights owned --pretty
+```
+
+기본적으로 비어 있지 않은 출력 디렉터리는 거부한다. `--overwrite`는 이전
+manifest가 기록한 프레임과 이 도구의 manifest/labels만 교체하고 다른 파일은
+보존한다. `--dedupe-threshold`를 지정하면 연속 프레임의 축소 grayscale 평균
+차이가 임계값 이하일 때 선택적으로 건너뛴다.
 #
 # ## 개요
 # TFT 게임 화면을 캡처하고 관심 영역(ROI)을 추출하는 MVP 1 단계 프로젝트.
