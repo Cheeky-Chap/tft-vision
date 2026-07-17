@@ -1,4 +1,5 @@
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -20,6 +21,22 @@ def record(**changes):
 
 
 class ReviewReportTests(unittest.TestCase):
+    def _dataset(self, root: Path) -> dict[str, Path]:
+        source = VideoSource(source_id="game", input_filename="clip.mp4", sha256="a" * 64, duration_seconds=1, fps=1, width=10, height=10)
+        frame = FrameRecord(frame_id="frame-1", relative_path="frames/frame-1.jpg", frame_number=0, timestamp_ms=0, width=10, height=10, sha256="b" * 64)
+        paths = {
+            "manifest": root / "manifest.json",
+            "labels": root / "labels.json",
+            "analyses": root / "analyses.jsonl",
+            "frame": root / frame.relative_path,
+        }
+        paths["frame"].parent.mkdir()
+        paths["manifest"].write_text(VideoManifest(source=source, extraction_options=ExtractionOptions(interval_seconds=1), frames=[frame]).model_dump_json(), encoding="utf-8")
+        paths["labels"].write_text(VideoLabels(source_id="game", frames=[FrameLabel(frame_id="frame-1", phase="combat", view_target="self")]).model_dump_json(), encoding="utf-8")
+        paths["analyses"].write_text(record(timestamp_ms=0).model_dump_json() + "\n", encoding="utf-8")
+        paths["frame"].write_bytes(b"synthetic-frame-bytes")
+        return paths
+
     def test_missing_explanation_is_pending_and_relative(self):
         item = record()
         self.assertEqual(item.analysis_status, AnalysisStatus.PENDING)
@@ -70,6 +87,55 @@ class ReviewReportTests(unittest.TestCase):
             self.assertNotIn(str(root), (root / "review.html").read_text(encoding="utf-8"))
             with self.assertRaises(ReviewReportError):
                 build_report(root, root.parent / "review.html")
+
+    def test_rejects_dataset_inputs_without_changing_original_bytes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            paths = self._dataset(root)
+            for path in paths.values():
+                before = path.read_bytes()
+                with self.subTest(path=path.name), self.assertRaises(ReviewReportError):
+                    build_report(root, path)
+                self.assertEqual(path.read_bytes(), before)
+
+    def test_rejects_dot_dot_normalization_bypass(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            paths = self._dataset(root)
+            before = paths["labels"].read_bytes()
+            with self.assertRaises(ReviewReportError):
+                build_report(root, root / "frames" / ".." / "labels.json")
+            self.assertEqual(paths["labels"].read_bytes(), before)
+
+    def test_rejects_symlink_alias_bypass_when_supported(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            paths = self._dataset(root)
+            alias = root / "alias.html"
+            try:
+                os.symlink(paths["frame"], alias)
+            except (OSError, NotImplementedError):
+                self.skipTest("symlinks are not supported")
+            before = paths["frame"].read_bytes()
+            with self.assertRaises(ReviewReportError):
+                build_report(root, alias)
+            self.assertEqual(paths["frame"].read_bytes(), before)
+
+    def test_review_html_is_allowed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._dataset(root)
+            self.assertEqual(build_report(root, root / "review.html"), 1)
+            self.assertTrue((root / "review.html").is_file())
+
+    def test_normal_execution_creates_analyses_and_review(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            paths = self._dataset(root)
+            paths["analyses"].unlink()
+            self.assertEqual(build_report(root, root / "review.html"), 1)
+            self.assertTrue(paths["analyses"].is_file())
+            self.assertTrue((root / "review.html").is_file())
 
     def test_errors_do_not_disclose_absolute_paths(self):
         failed = record(analysis_status="error", error="decoder failed at /private/user/frame.png")

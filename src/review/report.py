@@ -129,9 +129,23 @@ def build_report(dataset_dir: Path, output: Path, analyses_name: str = "analyses
         output.relative_to(dataset_dir)
     except ValueError as exc:
         raise ReviewReportError("output must be inside the dataset directory") from exc
+    analyses_path = (dataset_dir / analyses_name).resolve()
+    protected_paths = {
+        (dataset_dir / "manifest.json").resolve(),
+        (dataset_dir / "labels.json").resolve(),
+        analyses_path,
+    }
+    if output in protected_paths:
+        raise ReviewReportError("output must not overwrite a dataset input")
+
+    manifest = _load_model(dataset_dir / "manifest.json", VideoManifest)
+    frame_paths = {(dataset_dir / frame.relative_path).resolve() for frame in manifest.frames}
+    if output in frame_paths:
+        raise ReviewReportError("output must not overwrite a dataset input")
+
     records, labels = load_records(dataset_dir, analyses_name)
-    if not (dataset_dir / analyses_name).exists():
-        write_records(dataset_dir / analyses_name, records)
+    if not analyses_path.exists():
+        write_records(analyses_path, records)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(render_html(records, labels), encoding="utf-8")
     return len(records)
