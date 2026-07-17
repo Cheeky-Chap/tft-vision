@@ -55,8 +55,23 @@ python -m src.analyze_crops --input-dir crops --pretty
 python -m src.analyze_crops --input-dir samples/session_xxx/frame_0001 --output state.json
 ```
 
-현재 실제 OCR이나 모델 추론은 수행하지 않는다. 읽힌 ROI는 `unknown`, 누락되거나
-읽을 수 없는 ROI는 `unavailable`이며, 후속 인식기는 공통 파이프라인에 등록한다.
+기본 `analyze_crops` 호출은 실제 OCR이나 모델 추론을 수행하지 않는다. 숫자 HUD는
+로컬 Tesseract 실행 파일을 명시적으로 사용하는 별도 검사 명령으로 확인한다.
+
+### 골드·레벨 오프라인 OCR 검사
+
+`player_gold.png`와 `player_level.png`가 있는 입력 디렉터리를 지정하면 원본 crop,
+결정적 OpenCV 전처리 이미지, OCR 원문, 파싱 값과 상태를 JSON 및 단일 HTML에서
+대조할 수 있다. Tesseract는 자동 설치되지 않으며 기본적으로 PATH에서 찾는다.
+
+```powershell
+python -m src.inspect_hud_ocr --input-dir D:\tft-samples\frame_0001 --output-dir D:\tft-samples\frame_0001\ocr-review
+python -m src.inspect_hud_ocr --input-dir crops --output-dir ocr-review --tesseract-cmd C:\Tools\Tesseract-OCR\tesseract.exe
+```
+
+결과 디렉터리에는 `result.json`, `report.html`, `debug/`가 생성된다. 결과물과 실제
+crop은 저장소에 커밋하지 않는다. 실행 파일 누락은 `unavailable`, 실행 실패나
+timeout은 `error`, 빈 문자열·범위 밖 값은 `unknown`으로 남아 값을 추측하지 않는다.
 
 ### 로컬 게임플레이 영상 수집
 
