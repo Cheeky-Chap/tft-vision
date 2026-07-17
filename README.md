@@ -10,6 +10,38 @@ GitHub에서는 하나의 `tft-vision` 저장소만 사용한다.
 실제 캡처 이미지, crop, 사람이 작성한 labels, 로그, `.env`, 모델 가중치,
 학습 데이터셋은 저장소에 포함하지 않는다. `hermes-agent`, `trading-bot`,
 Misaka Discord gateway와 실행 의존성은 없다.
+
+## 자동 개발 및 검토 흐름
+
+`codex-auto` 라벨이 붙은 GitHub 이슈는 자동 작업 대상으로 사용한다. 작업은
+`origin/main` 기준의 별도 worktree와 작업 브랜치에서 진행하며, 로컬 검증을
+통과한 변경만 원격 브랜치에 push하고 Draft PR로 제출한다.
+
+```text
+codex-auto 이슈
+→ 별도 worktree/브랜치에서 구현
+→ 로컬 검증
+→ 작업 브랜치 push
+→ Draft PR 생성
+→ Codex 코드 검토
+→ GATE_GO 또는 NEEDS_HUMAN
+→ 사용자 수동 병합
+```
+
+Codex 검토는 중대한 문제를 찾는 보조 절차이며 모든 결함이 없음을 보장하지
+않는다. `GATE_GO` 이후에도 PR 병합은 사용자가 직접 승인하며, 자동 병합이나
+자동 배포는 수행하지 않는다.
+
+### 로컬 검증
+
+```powershell
+python -m compileall -q src
+python -m src.capture_loop --help
+```
+
+화면 캡처 검증에는 Windows 데스크톱이 필요하다. Headless Linux 환경에서는
+위 명령과 정적 검증을 실행할 수 있지만 Windows 화면 캡처가 성공했다고
+간주해서는 안 된다.
 #
 # ## 개요
 # TFT 게임 화면을 캡처하고 관심 영역(ROI)을 추출하는 MVP 1 단계 프로젝트.
