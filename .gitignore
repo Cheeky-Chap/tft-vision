@@ -46,7 +46,7 @@ credentials*
 positions.json
 state/
 !src/state/
-!src/state/**
+!src/state/*.py
 sessions/
 cache/
 tmp/
