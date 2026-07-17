@@ -6,6 +6,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
+from src.build_review_report import build_parser
 from src.review.explanations import TemplateExplanationGenerator
 from src.review.models import AnalysisStatus, FrameAnalysisRecord, SceneType
 from src.review.report import ReviewReportError, build_report, load_records, render_html
@@ -21,6 +22,14 @@ def record(**changes):
 
 
 class ReviewReportTests(unittest.TestCase):
+    def test_output_help_describes_safe_report_path(self):
+        help_text = " ".join(build_parser().format_help().split())
+        self.assertIn("HTML file path inside the dataset directory", help_text)
+        self.assertIn("manifest.json", help_text)
+        self.assertIn("labels.json", help_text)
+        self.assertIn("analyses JSONL file", help_text)
+        self.assertIn("frame image path", help_text)
+
     def _dataset(self, root: Path) -> dict[str, Path]:
         source = VideoSource(source_id="game", input_filename="clip.mp4", sha256="a" * 64, duration_seconds=1, fps=1, width=10, height=10)
         frame = FrameRecord(frame_id="frame-1", relative_path="frames/frame-1.jpg", frame_number=0, timestamp_ms=0, width=10, height=10, sha256="b" * 64)

@@ -83,6 +83,10 @@ manifest가 기록한 프레임과 이 도구의 manifest/labels만 교체하고
 python -m src.build_review_report --dataset-dir D:\datasets\game_001 --output D:\datasets\game_001\review.html
 ```
 
+`--output`은 데이터셋 디렉터리 내부의 HTML 파일 경로여야 한다. `manifest.json`,
+`labels.json`, 분석 JSONL 파일 또는 manifest에 기록된 프레임 이미지 경로와 같을
+수 없다.
+
 템플릿 설명 생성기는 결정적인 한국어 문장을 만들며, 후속 로컬 분석기는
 `FrameAnalysisRecord`에 자체 설명과 출처를 저장할 수 있다. 이미지, 분석 JSONL,
 HTML 결과는 저장소가 아닌 데이터셋 출력 디렉터리에 보관한다.
