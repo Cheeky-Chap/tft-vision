@@ -8,6 +8,35 @@ merge:
   admin_bypass: false
 
 policies:
+  tft-vision-ai-harness-docs:
+    allowed_paths:
+      - docs/**
+      - .github/ISSUE_TEMPLATE/**
+      - .github/pull_request_template.md
+      - AGENTS.md
+      - README.md
+
+    forbidden_paths:
+      - src/**
+      - tests/**
+      - captures/**
+      - crops/**
+      - debug/**
+      - logs/**
+      - samples/**
+      - videos/**
+      - datasets/**
+      - models/**
+      - .env
+      - Dockerfile
+      - docker-compose.yml
+      - "**/*.service"
+
+    commands:
+      - [python, -m, compileall, -q, src, tests]
+      - [python, -m, unittest, discover, -s, tests, -v]
+      - [git, diff, --check]
+
   tft-vision-hud-ocr:
     allowed_paths:
       - src/recognition/**
@@ -80,7 +109,6 @@ policies:
     dependencies:
       - repository: Cheeky-Chap/tft-vision
         issue: 13
-        required_state: merged
 
   tft-vision-roi-calibration:
     allowed_paths:
@@ -124,10 +152,8 @@ policies:
     dependencies:
       - repository: Cheeky-Chap/tft-vision
         issue: 13
-        required_state: merged
       - repository: Cheeky-Chap/tft-vision
         issue: 14
-        required_state: merged
 
   tft-vision-general-maintenance:
     allowed_paths:

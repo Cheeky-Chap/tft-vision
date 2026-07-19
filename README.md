@@ -25,12 +25,27 @@ codex-auto 이슈
 → Draft PR 생성
 → Codex 코드 검토
 → GATE_GO 또는 NEEDS_HUMAN
-→ 사용자 수동 병합
+→ Host가 현재 reviewed head의 GitHub native squash auto-merge 적격성 확인
+→ GitHub ruleset과 required checks가 병합 통제
+→ MERGED → DEPLOYMENT_REQUIRED → POST_MERGE_VERIFYING → OPERATIONALLY_VERIFIED
 ```
 
 Codex 검토는 중대한 문제를 찾는 보조 절차이며 모든 결함이 없음을 보장하지
-않는다. `GATE_GO` 이후에도 PR 병합은 사용자가 직접 승인하며, 자동 병합이나
-자동 배포는 수행하지 않는다.
+않는다. 현재 default-branch 정책은 `merge.enabled: true`, `method: squash`,
+`admin_bypass: false`이다. Codex는 병합을 수행하거나 auto-merge를 등록하지
+않는다. 모든 Host 테스트·리뷰·head SHA·보호 규칙이 충족된 경우에만 Host
+runner가 GitHub native auto-merge를 등록할 수 있고, 최종 병합은 GitHub ruleset과
+required checks가 통제한다. `MERGED`는 배포나 Windows 실행 검증 완료를
+의미하지 않는다. 자동 배포는 수행하지 않는다.
+
+작업 티켓·설계 결정·리뷰 증거·병합 후 수동 검증은 다음 문서를 따른다.
+
+- [시스템 개요](docs/architecture/system-overview.md)
+- [안전 경계](docs/architecture/safety-boundaries.md)
+- [AI 작업 티켓 템플릿](docs/plans/WORK-TICKET-TEMPLATE.md)
+- [Epic #4 의존성 그래프](docs/plans/EPIC-4-DEPENDENCY-GRAPH.md)
+- [리뷰 패키지 규격](docs/review/REVIEW-PACKAGE-SPEC.md)
+- [병합 후 운영 검증](docs/operations/POST-MERGE-VERIFICATION.md)
 
 ### 로컬 검증
 
