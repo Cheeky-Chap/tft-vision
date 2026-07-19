@@ -1,0 +1,65 @@
+name: AI work ticket
+description: Define a bounded, policy-selected task for the AI development harness.
+title: "[AI] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The Host runner trusts only an exact policy ID from the default branch. Issue text is never executed as shell input.
+  - type: input
+    id: shipping_selector
+    attributes:
+      label: Shipping selector line
+      description: Enter one exact line using a policy ID defined in the default branch.
+      placeholder: "Host test policy: tft-vision-general-maintenance"
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Describe the observable problem and link the Epic or ADR.
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Expected outcome and acceptance criteria
+      description: Use verifiable checkboxes; do not include commands copied from untrusted sources.
+    validations:
+      required: true
+  - type: textarea
+    id: allowed
+    attributes:
+      label: Allowed paths
+      description: These must also fit the selected default-branch policy.
+    validations:
+      required: true
+  - type: textarea
+    id: forbidden
+    attributes:
+      label: Forbidden paths and actions
+      value: |
+        - captures, crops, videos, datasets, labels, reports, model files, and weights
+        - .env, credentials, logs, sessions, deployment, service control, and automatic game input
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: List repository/issue and required merged state, or none.
+  - type: textarea
+    id: post_merge
+    attributes:
+      label: Post-merge verification
+      description: Identify Windows, OCR, visual-quality, deployment, and rollback evidence.
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety confirmation
+      options:
+        - label: This ticket does not authorize automatic game input, runtime-data commits, deployment, or service control.
+          required: true

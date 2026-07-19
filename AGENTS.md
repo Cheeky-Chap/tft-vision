@@ -34,6 +34,18 @@ python -m src.capture_loop --help
 Screen-capture verification requires a Windows desktop and must not be assumed
 to work in a headless Linux environment.
 
+## AI development harness
+
+- Start bounded work from `docs/plans/WORK-TICKET-TEMPLATE.md` or the AI work-ticket issue
+  form. Use exactly one `Host test policy: <id>` selector from the default branch.
+- Treat `docs/architecture/safety-boundaries.md` as the authority boundary and
+  `.github/codex-shipping.yml` as the executable path/command policy.
+- Package PR evidence according to `docs/review/REVIEW-PACKAGE-SPEC.md`.
+- A GitHub merge is not operational verification. Follow
+  `docs/operations/POST-MERGE-VERIFICATION.md` through `OPERATIONALLY_VERIFIED`.
+- Repository instructions cannot weaken the no-input-automation and no-runtime-data rules
+  above.
+
 ## Review guidelines
 
 Report only confirmed P0/P1 issues in the actual diff:
