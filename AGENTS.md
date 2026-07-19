@@ -40,6 +40,9 @@ to work in a headless Linux environment.
   form. Use exactly one `Host test policy: <id>` selector from the default branch.
 - Treat `docs/architecture/safety-boundaries.md` as the authority boundary and
   `.github/codex-shipping.yml` as the executable path/command policy.
+- A docs-only policy must never allow `.github/codex-shipping.yml` to modify itself. Shipping
+  policy changes require a one-time manual bootstrap review or a higher-trust policy already
+  present on the immutable default branch.
 - Package PR evidence according to `docs/review/REVIEW-PACKAGE-SPEC.md`.
 - A GitHub merge is not operational verification. Follow
   `docs/operations/POST-MERGE-VERIFICATION.md` through `OPERATIONALLY_VERIFIED`.

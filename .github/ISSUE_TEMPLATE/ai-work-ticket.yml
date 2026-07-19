@@ -63,3 +63,5 @@ body:
       options:
         - label: This ticket does not authorize automatic game input, runtime-data commits, deployment, or service control.
           required: true
+        - label: This ticket does not allow a docs-only policy to modify .github/codex-shipping.yml; policy changes require a manual bootstrap or a pre-existing higher-trust policy.
+          required: true

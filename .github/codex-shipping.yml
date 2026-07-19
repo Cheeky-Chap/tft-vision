@@ -13,7 +13,6 @@ policies:
       - docs/**
       - .github/ISSUE_TEMPLATE/**
       - .github/pull_request_template.md
-      - .github/codex-shipping.yml
       - AGENTS.md
       - README.md
 

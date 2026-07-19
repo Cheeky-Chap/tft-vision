@@ -28,6 +28,8 @@
 - [ ] No automatic click, keyboard input, purchase, reroll, or game control.
 - [ ] Linux checks are not presented as Windows capture/OCR/visual proof.
 - [ ] Codex did not merge, deploy, or change repository protection.
+- [ ] A docs-only policy does not modify `.github/codex-shipping.yml`; any policy change is
+      identified as a manual bootstrap or authorized by a higher-trust base-branch policy.
 
 ## Merge and post-merge handoff
 

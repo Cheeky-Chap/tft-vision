@@ -19,6 +19,8 @@ shell commands.
 
 - runtime captures, crops, videos, datasets, labels, reports, and weights
 - `.env`, credentials, logs, sessions, service control, deployment, and automatic game input
+- `.github/codex-shipping.yml`, unless the ticket is an explicitly approved manual bootstrap
+  or selects a higher-trust policy already present on its immutable base
 - any path not allowed by the selected default-branch policy
 
 ## Acceptance criteria

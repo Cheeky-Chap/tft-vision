@@ -31,3 +31,16 @@ checks remain authoritative. A registered auto-merge request is not a completed 
 Unknown, missing, duplicate, or malformed policy selectors stop the task. A changed head
 invalidates host-test and review evidence. Out-of-scope files, runtime data, unresolved
 blocking conversations, or absent manual evidence prevent operational verification.
+
+## Shipping-policy governance
+
+`.github/codex-shipping.yml` is executable authorization data, not ordinary documentation.
+A docs-only policy must not include that file in its own `allowed_paths`. Shipping-policy
+changes require either:
+
+1. a one-time manual bootstrap PR whose checks are explicitly recorded as local/manual and
+   which does not register native auto-merge; or
+2. a higher-trust, narrowly scoped policy that was already present on the immutable default
+   branch used for the task.
+
+A policy introduced or widened by the current PR cannot authorize that same PR.
